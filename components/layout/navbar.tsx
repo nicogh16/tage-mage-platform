@@ -44,6 +44,7 @@ export function Navbar() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/scores', label: 'Scores' },
+    { href: '/tests-blancs', label: 'Tests Blancs' },
     { href: '/notes/calcul_mental', label: 'Notes' },
     { href: '/cheatsheet/calcul_mental', label: 'Cheat Sheets' },
   ];

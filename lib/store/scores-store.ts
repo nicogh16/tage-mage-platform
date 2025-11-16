@@ -154,7 +154,7 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
     const validGroups = [group1Avg, group2Avg, group3Avg].filter((avg) => avg > 0);
     if (validGroups.length === 0) return 0;
     
-    // Average of groups (out of 30), then multiply by 10 to get out of 600
+    // Average of groups (out of 30), then multiply by 10
     const averageOfGroups = validGroups.reduce((sum, avg) => sum + avg, 0) / validGroups.length;
     return Math.round(averageOfGroups * 10 * 10) / 10;
   },
