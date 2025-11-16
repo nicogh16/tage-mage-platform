@@ -84,7 +84,12 @@ export default function ScoresPage() {
                   <Select
                     id="section"
                     value={section}
-                    onChange={(e) => setSection(e.target.value)}
+                    onChange={(e) => {
+                      const newSection = e.target.value as SectionId;
+                      if (SECTION_IDS.includes(newSection)) {
+                        setSection(newSection);
+                      }
+                    }}
                     required
                   >
                     {SECTION_IDS.map((sectionId) => (
