@@ -6,7 +6,7 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Plateforme d'entraînement Tage Mage",
+  title: "Plateforme d&apos;entraînement Tage Mage",
   description: "Suivez votre progression et améliorez vos scores au Tage Mage",
 };
 

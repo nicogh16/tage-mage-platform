@@ -209,7 +209,7 @@ export default function DashboardPage() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Moyennes par Section</CardTitle>
-            <CardDescription>Vue d'ensemble de vos performances</CardDescription>
+            <CardDescription>Vue d&apos;ensemble de vos performances</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
