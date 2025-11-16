@@ -58,7 +58,7 @@ export const GROUPS = {
 
 export const MAX_SCORE_PER_SECTION = 15;
 export const MAX_SCORE_PER_GROUP = 30; // 2 sections × 15
-export const MAX_SCORE_TAGE_MAGE = 600; // Average of 3 groups × 2
+export const MAX_SCORE_TAGE_MAGE = 600; // Average of 3 groups × 10
 
 // Note categories
 export const NOTE_CATEGORIES = {

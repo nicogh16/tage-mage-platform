@@ -145,7 +145,7 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
     return 0;
   },
   getTageMageScore: () => {
-    // Calculate average of 3 groups, then multiply by 2 to get score out of 600
+    // Calculate average of 3 groups, then multiply by 10 to get score out of 600
     // Each group is out of 30 (2 sections × 15)
     const group1Avg = get().getAverageByGroup('groupe1');
     const group2Avg = get().getAverageByGroup('groupe2');
@@ -154,9 +154,9 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
     const validGroups = [group1Avg, group2Avg, group3Avg].filter((avg) => avg > 0);
     if (validGroups.length === 0) return 0;
     
-    // Average of groups (out of 30), then multiply by 2 to get out of 600
+    // Average of groups (out of 30), then multiply by 10 to get out of 600
     const averageOfGroups = validGroups.reduce((sum, avg) => sum + avg, 0) / validGroups.length;
-    return Math.round(averageOfGroups * 2 * 10) / 10;
+    return Math.round(averageOfGroups * 10 * 10) / 10;
   },
 }));
 
