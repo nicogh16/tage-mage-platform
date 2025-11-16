@@ -15,6 +15,11 @@ import { formatDate } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
 import { SECTION_COLOR_MAP } from '@/lib/color-map';
 
+// Type guard function
+function isValidSectionId(value: string): value is SectionId {
+  return SECTION_IDS.includes(value as SectionId);
+}
+
 export default function ScoresPage() {
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get('section');
@@ -85,9 +90,9 @@ export default function ScoresPage() {
                     id="section"
                     value={section}
                     onChange={(e) => {
-                      const newSection = e.target.value as SectionId;
-                      if (SECTION_IDS.includes(newSection)) {
-                        setSection(newSection);
+                      const value = e.target.value;
+                      if (isValidSectionId(value)) {
+                        setSection(value);
                       }
                     }}
                     required
