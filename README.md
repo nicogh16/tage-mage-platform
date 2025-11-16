@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Plateforme d'entraînement Tage Mage
 
 Une application web complète pour suivre votre progression et améliorer vos scores au Tage Mage.
@@ -182,3 +183,6 @@ Développé pour l'entraînement au Tage Mage.
 
 Bon entraînement ! 🎓
 
+=======
+# tage-mage-platform
+>>>>>>> 027cd0e7a86c9d2d3ba6a830bbeb68010c7c57e2
