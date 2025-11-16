@@ -10,14 +10,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { useNotesStore } from '@/lib/store/notes-store';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { SECTIONS, SECTION_IDS, NOTE_CATEGORIES, NoteCategoryId } from '@/lib/constants';
+import { SECTIONS, SECTION_IDS, NOTE_CATEGORIES, NoteCategoryId, SectionId } from '@/lib/constants';
 import { formatDateTime } from '@/lib/utils';
 import { Plus, Search, Edit2, Trash2, X, Tag } from 'lucide-react';
 
 export default function NotesPage() {
   const params = useParams();
   const router = useRouter();
-  const section = (params.section as any) || SECTION_IDS[0];
+  const sectionParam = params.section as string | undefined;
+  const section: SectionId = (SECTION_IDS.includes(sectionParam as SectionId) 
+    ? sectionParam 
+    : SECTION_IDS[0]) as SectionId;
   
   const { notes, loading, fetchNotes, addNote, updateNote, deleteNote, searchNotes } = useNotesStore();
   const { user } = useAuthStore();

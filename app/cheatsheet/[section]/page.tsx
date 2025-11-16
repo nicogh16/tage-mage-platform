@@ -4,12 +4,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
-import { SECTIONS, SECTION_IDS } from '@/lib/constants';
+import { SECTIONS, SECTION_IDS, SectionId } from '@/lib/constants';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Cheat sheet content for each section
-const CHEATSHEETS: Record<string, { title: string; content: string[] }> = {
+const CHEATSHEETS: Record<SectionId, { title: string; content: string[] }> = {
   calcul_mental: {
     title: 'Calcul Mental',
     content: [
@@ -179,7 +179,10 @@ const CHEATSHEETS: Record<string, { title: string; content: string[] }> = {
 export default function CheatsheetPage() {
   const params = useParams();
   const router = useRouter();
-  const section = (params.section as any) || SECTION_IDS[0];
+  const sectionParam = params.section as string | undefined;
+  const section: SectionId = (SECTION_IDS.includes(sectionParam as SectionId) 
+    ? sectionParam 
+    : SECTION_IDS[0]) as SectionId;
   
   const sectionData = SECTIONS[section];
   const cheatsheet = CHEATSHEETS[section] || CHEATSHEETS.calcul_mental;

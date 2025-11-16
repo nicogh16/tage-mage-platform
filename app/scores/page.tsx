@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useScoresStore } from '@/lib/store/scores-store';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { SECTIONS, SECTION_IDS, COLOR_CLASSES, MAX_SCORE_PER_SECTION } from '@/lib/constants';
+import { SECTIONS, SECTION_IDS, COLOR_CLASSES, MAX_SCORE_PER_SECTION, SectionId } from '@/lib/constants';
 import { ScoreLineChart } from '@/components/charts/line-chart';
 import { formatDate } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
@@ -17,7 +17,10 @@ import { SECTION_COLOR_MAP } from '@/lib/color-map';
 
 export default function ScoresPage() {
   const searchParams = useSearchParams();
-  const selectedSection = (searchParams.get('section') as any) || SECTION_IDS[0];
+  const sectionParam = searchParams.get('section');
+  const selectedSection: SectionId = (SECTION_IDS.includes(sectionParam as SectionId) 
+    ? sectionParam 
+    : SECTION_IDS[0]) as SectionId;
   
   const { scores, loading, fetchScores, addScore, deleteScore, getScoresBySection } = useScoresStore();
   const { user } = useAuthStore();
