@@ -1,0 +1,29 @@
+===========================================
+CONFIGURATION DES VARIABLES D'ENVIRONNEMENT
+===========================================
+
+Créez un fichier nommé ".env.local" à la racine du projet (même niveau que package.json)
+avec le contenu suivant :
+
+NEXT_PUBLIC_SUPABASE_URL=https://lkuvhoudrzuvdwzuwwnp.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdXZob3Vkcnp1dmR3enV3d25wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxOTc2NjcsImV4cCI6MjA3ODc3MzY2N30.4eMPgO9dEQmOzrGhQdqOhtt_w9EIkMDLgyC7gtUg7KM
+
+===========================================
+ÉTAPES SUIVANTES
+===========================================
+
+1. Créez le fichier .env.local avec le contenu ci-dessus
+
+2. Dans Supabase, allez dans SQL Editor et exécutez le script :
+   database/schema.sql
+
+3. Installez les dépendances :
+   npm install
+
+4. Lancez l'application :
+   npm run dev
+
+5. Ouvrez http://localhost:3000 et créez un compte !
+
+===========================================
+
