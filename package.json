@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "download-pdfs": "node scripts/comprehensive-download.js",
+    "download-from-urls": "node scripts/download-from-urls.js",
+    "create-demo-pdfs": "node scripts/create-demo-pdfs.js",
+    "find-forum-resources": "node scripts/find-forum-resources.js"
   },
   "dependencies": {
     "next": "14.2.5",

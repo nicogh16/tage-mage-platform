@@ -1,9 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, BookOpen, Clock, Award } from 'lucide-react';
+import { Download, FileText, BookOpen, Clock, Award, AlertCircle } from 'lucide-react';
 
 // Tests blancs officiels Tage Mage
 const OFFICIAL_TESTS = [
@@ -15,7 +16,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.tage-mage.com/test-blanc-officiel',
+    pdfPath: '/pdfs/tests-blancs/fnege-2024.pdf',
     available: true,
   },
   {
@@ -26,7 +27,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.tage-mage.com/test-blanc-officiel',
+    pdfPath: '/pdfs/tests-blancs/fnege-2023.pdf',
     available: true,
   },
   {
@@ -37,7 +38,7 @@ const OFFICIAL_TESTS = [
     duration: 'Variable',
     sections: 6,
     official: true,
-    link: 'https://www.tage-mage.com/annales',
+    pdfPath: '/pdfs/tests-blancs/fnege-annales.pdf',
     available: true,
   },
   {
@@ -48,7 +49,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.ecricome.org/preparation-tage-mage',
+    pdfPath: '/pdfs/tests-blancs/ecricome.pdf',
     available: true,
   },
   {
@@ -59,7 +60,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.concours-pass.fr/preparation-tage-mage',
+    pdfPath: '/pdfs/tests-blancs/pass.pdf',
     available: true,
   },
   {
@@ -70,7 +71,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.concours-sesame.net/preparation-tage-mage',
+    pdfPath: '/pdfs/tests-blancs/sesame.pdf',
     available: true,
   },
   {
@@ -81,7 +82,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.concours-acces.com/preparation-tage-mage',
+    pdfPath: '/pdfs/tests-blancs/acces.pdf',
     available: true,
   },
   {
@@ -92,7 +93,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.concours-link.fr/preparation-tage-mage',
+    pdfPath: '/pdfs/tests-blancs/link.pdf',
     available: true,
   },
   {
@@ -103,7 +104,7 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.ambitionsplus.fr/preparation-tage-mage',
+    pdfPath: '/pdfs/tests-blancs/ambitions.pdf',
     available: true,
   },
   {
@@ -114,12 +115,44 @@ const OFFICIAL_TESTS = [
     duration: '90 minutes',
     sections: 6,
     official: true,
-    link: 'https://www.concours-team.fr/preparation-tage-mage',
+    pdfPath: '/pdfs/tests-blancs/team.pdf',
     available: true,
   },
 ];
 
 export default function TestsBlancsPage() {
+  const [pdfStatus, setPdfStatus] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // Vérifier l'existence des PDFs
+    const checkPDFs = async () => {
+      const status: Record<string, boolean> = {};
+      for (const test of OFFICIAL_TESTS) {
+        try {
+          const response = await fetch(test.pdfPath, { method: 'HEAD' });
+          status[test.id] = response.ok;
+        } catch {
+          status[test.id] = false;
+        }
+      }
+      setPdfStatus(status);
+    };
+    checkPDFs();
+  }, []);
+
+  const handleOpenPDF = (pdfPath: string) => {
+    window.open(pdfPath, '_blank');
+  };
+
+  const handleDownloadPDF = (pdfPath: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = pdfPath;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
@@ -143,6 +176,26 @@ export default function TestsBlancsPage() {
               Ils sont les plus proches des conditions réelles d&apos;examen.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="text-sm text-blue-800 dark:text-blue-200">
+              <p className="mb-2">
+                <strong>💡 Comment obtenir les PDFs officiels ?</strong>
+              </p>
+              <p className="mb-3">
+                Les tests blancs officiels sont généralement gratuits mais nécessitent une inscription sur les sites officiels.
+                Consultez le guide complet pour savoir où les télécharger.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/pdfs/tests-blancs/HOW_TO_ADD_PDFS.md', '_blank')}
+                className="text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Voir le guide d&apos;ajout des PDFs
+              </Button>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Tests List */}
@@ -175,21 +228,39 @@ export default function TestsBlancsPage() {
                   </div>
                 </div>
                 {test.available ? (
-                  <Button
-                    asChild
-                    className="w-full"
-                    variant="default"
-                  >
-                    <a
-                      href={test.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center"
-                    >
-                      Accéder au test
-                      <ExternalLink className="h-4 w-4 ml-2" />
-                    </a>
-                  </Button>
+                  pdfStatus[test.id] === false ? (
+                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                        <div className="text-xs text-yellow-800 dark:text-yellow-300">
+                          <p className="font-medium mb-1">PDF non disponible</p>
+                          <p className="mb-2">Placez le fichier <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">{test.pdfPath.replace('/pdfs/tests-blancs/', '')}</code> dans le dossier <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">public/pdfs/tests-blancs/</code></p>
+                          <p className="text-yellow-700 dark:text-yellow-400">
+                            📖 Consultez le guide pour savoir où télécharger les PDFs officiels
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        variant="default"
+                        onClick={() => handleOpenPDF(test.pdfPath)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Ouvrir
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        variant="outline"
+                        onClick={() => handleDownloadPDF(test.pdfPath, `${test.id}.pdf`)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Télécharger
+                      </Button>
+                    </div>
+                  )
                 ) : (
                   <Button disabled className="w-full" variant="outline">
                     Bientôt disponible

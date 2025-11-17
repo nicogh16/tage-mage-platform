@@ -73,6 +73,7 @@ export async function middleware(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith('/dashboard') ||
         request.nextUrl.pathname.startsWith('/scores') ||
         request.nextUrl.pathname.startsWith('/tests-blancs') ||
+        request.nextUrl.pathname.startsWith('/flashcards') ||
         request.nextUrl.pathname.startsWith('/notes') ||
         request.nextUrl.pathname.startsWith('/cheatsheet')) {
       if (!user) {

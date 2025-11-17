@@ -1,0 +1,15 @@
+# Fichier d'exemple pour télécharger des PDFs
+# Placez ce fichier dans le dossier scripts/ et renommez-le en urls.txt
+# Ajoutez une URL par ligne (les lignes commençant par # sont ignorées)
+
+# Exemples (remplacez par de vraies URLs trouvées sur les forums):
+# https://drive.google.com/uc?export=download&id=XXXXX
+# https://www.dropbox.com/s/XXXXX/test.pdf?dl=1
+# https://example.com/path/to/test-blanc.pdf
+
+# Pour trouver des URLs:
+# 1. Visitez les forums (Prepa-HEC.org, Étudiant.com)
+# 2. Cherchez les posts avec des liens de drives partagés
+# 3. Copiez les URLs directes vers les PDFs
+# 4. Ajoutez-les ici, une par ligne
+
