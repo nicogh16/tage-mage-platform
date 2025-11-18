@@ -1148,6 +1148,94 @@ export const RESOLUTION_PROBLEMES: Flashcard[] = [
   },
 ];
 
+// FLASHCARDS SUPPLÉMENTAIRES - Exemples concrets de test
+export const EXEMPLES_TEST: Flashcard[] = [
+  // Calcul Mental - Exemples pratiques
+  {
+    id: 'test-calc-1',
+    front: '47 × 11 = ?',
+    back: '517 (4|(4+7)|7 = 4|11|7, retenue → 517)',
+    category: 'calcul_mental',
+    difficulty: 'medium',
+    examples: ['Méthode: Additionner chiffres adjacents', '4+7 = 11, donc retenue', 'Résultat: 517'],
+  },
+  {
+    id: 'test-calc-2',
+    front: '15% de 240 = ?',
+    back: '36 (10% = 24, 5% = 12, donc 15% = 36)',
+    category: 'calcul_mental',
+    difficulty: 'easy',
+    examples: ['10% de 240 = 24', '5% de 240 = 12', '15% = 10% + 5% = 36'],
+  },
+  {
+    id: 'test-calc-3',
+    front: 'Un prix passe de 80€ à 100€. Augmentation en % ?',
+    back: '25% ((100-80)/80 × 100 = 20/80 × 100 = 25%)',
+    category: 'calcul_mental',
+    difficulty: 'medium',
+    examples: ['Formule: ((Final - Initial) / Initial) × 100', '((100-80)/80) × 100', '= 20/80 × 100 = 25%'],
+  },
+  // Raisonnement Logique - Exemples pratiques
+  {
+    id: 'test-logique-1',
+    front: 'Si "A→B" est vrai et B est faux, que peut-on dire de A ?',
+    back: 'A est faux (contraposée: si non-B alors non-A)',
+    category: 'raisonnement_logique',
+    difficulty: 'medium',
+    examples: ['Si "il pleut → sol mouillé" et "sol sec"', 'Alors "il ne pleut pas"', 'C\'est la contraposée'],
+  },
+  {
+    id: 'test-logique-2',
+    front: 'La négation de "Tous les X sont Y" est ?',
+    back: '"Au moins un X n\'est pas Y"',
+    category: 'raisonnement_logique',
+    difficulty: 'hard',
+    examples: ['non(∀x P(x)) = ∃x non-P(x)', 'Exemple: "Tous chats sont noirs" → "Au moins un chat n\'est pas noir"'],
+  },
+  // Expression - Exemples pratiques
+  {
+    id: 'test-expr-1',
+    front: '"Les fleurs que j\'ai (cueilli/cueillies)" ?',
+    back: 'cueillies (COD "que" placé avant → accordé)',
+    category: 'expression',
+    difficulty: 'medium',
+    examples: ['Test: "J\'ai cueilli quoi ?" → "que" (COD avant)', 'Donc accordé avec "fleurs"', 'Règle: COD avant = accordé'],
+  },
+  {
+    id: 'test-expr-2',
+    front: '"Il (a/à) besoin d\'aide" ?',
+    back: 'a (verbe avoir: "Il avait besoin" ✓)',
+    category: 'expression',
+    difficulty: 'easy',
+    examples: ['Test: Remplacer par "avait"', '"Il avait besoin" ✓ donc "a"', '"Il va à Paris" → "Il va avait Paris" ✗ donc "à"'],
+  },
+  // Résolution de Problèmes - Exemples pratiques
+  {
+    id: 'test-resol-1',
+    front: 'Partager 120€ selon 1:2:3',
+    back: '20€, 40€, 60€ (Total parts = 6, donc 1/6, 2/6, 3/6)',
+    category: 'resolution_problemes',
+    difficulty: 'medium',
+    examples: ['Total parts = 1+2+3 = 6', '1ère: (1/6) × 120 = 20€', '2ème: (2/6) × 120 = 40€', '3ème: (3/6) × 120 = 60€'],
+  },
+  {
+    id: 'test-resol-2',
+    front: 'Un train fait 240 km en 2h. Vitesse ?',
+    back: '120 km/h (V = D/T = 240/2 = 120)',
+    category: 'resolution_problemes',
+    difficulty: 'easy',
+    examples: ['Formule: Vitesse = Distance / Temps', 'V = 240 / 2', 'V = 120 km/h'],
+  },
+  {
+    id: 'test-resol-3',
+    front: 'Si un prix augmente de 10% puis baisse de 10%, retrouve-t-on le prix initial ?',
+    back: 'NON (100€ → 110€ → 99€)',
+    category: 'resolution_problemes',
+    difficulty: 'hard',
+    examples: ['100€ + 10% = 110€', '110€ - 10% = 99€', 'Les pourcentages ne s\'annulent pas car la base change'],
+  },
+];
+
 // Toutes les flashcards regroupées
 export const ALL_FLASHCARDS: Flashcard[] = [
   ...CARRES,
@@ -1161,6 +1249,7 @@ export const ALL_FLASHCARDS: Flashcard[] = [
   ...COMPREHENSION_TEXTES,
   ...CONDITIONS_MINIMALES,
   ...RESOLUTION_PROBLEMES,
+  ...EXEMPLES_TEST,
 ];
 
 // Obtenir les flashcards par catégorie
