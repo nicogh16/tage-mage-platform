@@ -1236,6 +1236,136 @@ export const EXEMPLES_TEST: Flashcard[] = [
   },
 ];
 
+// FLASHCARDS SUPPLÉMENTAIRES - Concepts essentiels des cheat sheets
+export const CONCEPTS_ESSENTIELS: Flashcard[] = [
+  // Calcul Mental - Astuces supplémentaires
+  {
+    id: 'calc-verif-parite',
+    front: 'Comment vérifier rapidement un calcul ?',
+    back: 'Vérifier la parité (pair/impair) et l\'ordre de grandeur',
+    category: 'calcul_mental',
+    difficulty: 'easy',
+    examples: ['Pair × Pair = Pair', 'Impair × Impair = Impair', 'Vérifier si résultat ≈ 100, 1000, etc.'],
+  },
+  {
+    id: 'calc-eliminer-zeros',
+    front: 'Astuce pour simplifier les calculs ?',
+    back: 'Éliminer les zéros en fin de calcul',
+    category: 'calcul_mental',
+    difficulty: 'easy',
+    examples: ['1200 × 50 = 12 × 5 × 1000 = 60000', 'Simplifier avant de calculer'],
+  },
+  // Raisonnement Logique - Concepts avancés
+  {
+    id: 'logique-table-verite',
+    front: 'Table de vérité de "Si P alors Q" (P→Q) ?',
+    back: 'V→V=V, V→F=F, F→V=V, F→F=V (Faux seulement si P vrai ET Q faux)',
+    category: 'raisonnement_logique',
+    difficulty: 'hard',
+    examples: ['Si P vrai et Q vrai → Vrai', 'Si P vrai et Q faux → Faux', 'Si P faux → Toujours Vrai'],
+  },
+  {
+    id: 'logique-diagramme-venn',
+    front: 'Comment utiliser un diagramme de Venn ?',
+    back: 'Dessiner des cercles pour représenter les ensembles, intersection = éléments communs',
+    category: 'raisonnement_logique',
+    difficulty: 'medium',
+    examples: ['Cercle A = étudiants', 'Cercle B = sportifs', 'Intersection = étudiants sportifs'],
+  },
+  // Expression - Tests pratiques
+  {
+    id: 'expr-test-a-à',
+    front: 'Test pour distinguer "a" et "à" ?',
+    back: 'Remplacer par "avait" - si ça marche = "a" (verbe), sinon = "à" (préposition)',
+    category: 'expression',
+    difficulty: 'easy',
+    examples: ['"Il a faim" → "Il avait faim" ✓ = "a"', '"Il va à Paris" → "Il va avait Paris" ✗ = "à"'],
+  },
+  {
+    id: 'expr-test-ou-où',
+    front: 'Test pour distinguer "ou" et "où" ?',
+    back: 'Remplacer par "ou bien" - si ça marche = "ou" (conjonction), sinon = "où" (lieu)',
+    category: 'expression',
+    difficulty: 'easy',
+    examples: ['"Thé ou café" → "Thé ou bien café" ✓ = "ou"', '"Où vas-tu ?" → "Ou bien vas-tu ?" ✗ = "où"'],
+  },
+  {
+    id: 'expr-test-ces-ses',
+    front: 'Test pour distinguer "ces" et "ses" ?',
+    back: 'Remplacer par "les siens" - si ça marche = "ses" (possessif), sinon = "ces" (démonstratif)',
+    category: 'expression',
+    difficulty: 'easy',
+    examples: ['"Ses livres" → "les siens" ✓ = "ses"', '"Ces livres" → "les siens" ✗ = "ces"'],
+  },
+  {
+    id: 'expr-cod-avant-apres',
+    front: 'Comment savoir si le COD est avant ou après le verbe ?',
+    back: 'Poser la question "J\'ai fait QUOI ?" - si la réponse est avant le verbe, accordé',
+    category: 'expression',
+    difficulty: 'medium',
+    examples: ['"J\'ai cueilli des fleurs" → QUOI ? "des fleurs" (après) = invariable', '"Les fleurs que j\'ai cueillies" → QUOI ? "que" (avant) = accordé'],
+  },
+  // Compréhension de Textes - Méthode
+  {
+    id: 'comp-methode-lecture',
+    front: 'Méthode efficace pour la compréhension de textes ?',
+    back: '1. Lire les questions d\'abord (30 sec) 2. Lire le texte 3. Chercher les réponses',
+    category: 'comprehension_textes',
+    difficulty: 'easy',
+    examples: ['Lire les questions en premier oriente la lecture', 'Gain de temps énorme'],
+  },
+  {
+    id: 'comp-idee-principale-ou',
+    front: 'Où trouver l\'idée principale d\'un texte ?',
+    back: 'Dans l\'introduction (1er paragraphe) OU la conclusion (dernier paragraphe)',
+    category: 'comprehension_textes',
+    difficulty: 'easy',
+    examples: ['Souvent dans le 1er paragraphe', 'Ou dans le dernier paragraphe', 'Éviter les détails du milieu'],
+  },
+  // Conditions Minimales - Tests
+  {
+    id: 'cond-test-necessaire',
+    front: 'Comment tester si une condition est nécessaire ?',
+    back: 'Retirer la condition - si le résultat devient impossible, elle est nécessaire',
+    category: 'conditions_minimales',
+    difficulty: 'medium',
+    examples: ['Retirer "avoir 18 ans" → vote impossible → nécessaire', 'Retirer "être français" → vote impossible → nécessaire'],
+  },
+  {
+    id: 'cond-seulement-si',
+    front: '"A seulement si B" signifie ?',
+    back: 'B est nécessaire pour A (équivalent à "si A alors B")',
+    category: 'conditions_minimales',
+    difficulty: 'hard',
+    examples: ['"Tu réussis seulement si tu travailles" = si tu réussis alors tu travailles', '"Seulement si" = condition nécessaire'],
+  },
+  // Résolution de Problèmes - Méthode
+  {
+    id: 'resol-methode-generale',
+    front: 'Méthode générale pour résoudre un problème ?',
+    back: '1. Lire 2 fois 2. Identifier données/inconnue 3. Choisir méthode 4. Résoudre 5. Vérifier',
+    category: 'resolution_problemes',
+    difficulty: 'easy',
+    examples: ['Lire 2 fois évite les erreurs', 'Vérifier en replaçant dans l\'énoncé'],
+  },
+  {
+    id: 'resol-pourcentage-piege',
+    front: 'Piège classique avec les pourcentages successifs ?',
+    back: '100€ + 20% puis -20% ≠ 100€ (120€ - 20% = 96€) - les pourcentages ne s\'annulent pas',
+    category: 'resolution_problemes',
+    difficulty: 'hard',
+    examples: ['100€ + 20% = 120€', '120€ - 20% = 96€ (pas 100€)', 'La base change à chaque fois'],
+  },
+  {
+    id: 'resol-vitesse-moyenne-piege',
+    front: 'Piège avec la vitesse moyenne ?',
+    back: 'Vitesse moyenne ≠ moyenne des vitesses (Distance totale / Temps total)',
+    category: 'resolution_problemes',
+    difficulty: 'hard',
+    examples: ['60 km en 2h (30 km/h) puis 40 km en 1h (40 km/h)', 'Moyenne des vitesses = 35 km/h ✗', 'Vitesse moyenne = 100 km / 3h = 33.3 km/h ✓'],
+  },
+];
+
 // Toutes les flashcards regroupées
 export const ALL_FLASHCARDS: Flashcard[] = [
   ...CARRES,
