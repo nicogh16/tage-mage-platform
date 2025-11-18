@@ -1379,7 +1379,7 @@ export const ALL_FLASHCARDS: Flashcard[] = [
   ...COMPREHENSION_TEXTES,
   ...CONDITIONS_MINIMALES,
   ...RESOLUTION_PROBLEMES,
-  ...EXEMPLES_TEST,
+  ...CONCEPTS_ESSENTIELS,
 ];
 
 // Obtenir les flashcards par catégorie
