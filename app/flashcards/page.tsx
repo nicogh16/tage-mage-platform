@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
 import {
   ALL_FLASHCARDS,
   FLASHCARD_CATEGORIES,
@@ -13,18 +12,38 @@ import {
   type FlashcardCategory,
   type Flashcard,
 } from '@/lib/flashcards-data';
-import { RotateCcw, Check, X, Shuffle, ArrowLeft, ArrowRight, BookOpen } from 'lucide-react';
+import {
+  saveCardProgress,
+  getCardProgress,
+  getAllProgress,
+  resetProgress,
+  getCardsToReview,
+  getCardPriority,
+  getMasteryStats,
+} from '@/lib/flashcards-store';
+import { RotateCcw, Check, X, Shuffle, ArrowLeft, ArrowRight, BookOpen, Brain, Target, TrendingUp, Zap } from 'lucide-react';
+
+type StudyMode = 'normal' | 'smart' | 'review';
 
 export default function FlashcardsPage() {
   const [selectedCategory, setSelectedCategory] = useState<FlashcardCategory | 'all'>('all');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
-  const [knownCards, setKnownCards] = useState<Set<string>>(new Set());
-  const [showStats, setShowStats] = useState(false);
-  const [reviewMode, setReviewMode] = useState(false); // Mode révision : seulement les non connues
+  const [studyMode, setStudyMode] = useState<StudyMode>('smart');
+  const [cardProgress, setCardProgress] = useState<Record<string, ReturnType<typeof getCardProgress>>>({});
 
-  // Initialiser les flashcards
+  // Charger la progression au démarrage
+  useEffect(() => {
+    const progress = getAllProgress();
+    const progressMap: Record<string, ReturnType<typeof getCardProgress>> = {};
+    Object.values(progress).forEach((p) => {
+      progressMap[p.cardId] = p;
+    });
+    setCardProgress(progressMap);
+  }, []);
+
+  // Initialiser les flashcards selon le mode d'étude
   useEffect(() => {
     let cards: Flashcard[] = [];
     if (selectedCategory === 'all') {
@@ -32,67 +51,84 @@ export default function FlashcardsPage() {
     } else {
       cards = getFlashcardsByCategory(selectedCategory);
     }
-    
-    // En mode révision, filtrer les cartes connues
-    if (reviewMode) {
-      cards = cards.filter(card => !knownCards.has(card.id));
+
+    // Mode intelligent : prioriser les cartes à réviser
+    if (studyMode === 'smart') {
+      const cardIds = cards.map((c) => c.id);
+      const toReview = getCardsToReview(cardIds);
+      
+      // Trier par priorité (cartes à réviser en premier)
+      cards.sort((a, b) => {
+        const priorityA = getCardPriority(a.id);
+        const priorityB = getCardPriority(b.id);
+        return priorityB - priorityA; // Plus haute priorité en premier
+      });
+    } else if (studyMode === 'review') {
+      // Mode révision : seulement les cartes à réviser
+      const cardIds = cards.map((c) => c.id);
+      const toReview = getCardsToReview(cardIds);
+      cards = cards.filter((c) => toReview.includes(c.id));
+    } else {
+      // Mode normal : mélanger aléatoirement
+      cards = shuffleArray(cards);
     }
-    
-    setFlashcards(shuffleArray(cards));
+
+    setFlashcards(cards);
     setCurrentIndex(0);
     setIsFlipped(false);
-  }, [selectedCategory, reviewMode, knownCards]);
+  }, [selectedCategory, studyMode]);
 
   const currentCard = flashcards[currentIndex];
   const progress = flashcards.length > 0 ? ((currentIndex + 1) / flashcards.length) * 100 : 0;
-  
-  // Calculer les stats basées sur toutes les cartes de la catégorie, pas seulement celles affichées
-  const allCardsInCategory = selectedCategory === 'all' 
-    ? ALL_FLASHCARDS 
-    : getFlashcardsByCategory(selectedCategory);
-  const knownInCategory = allCardsInCategory.filter(card => knownCards.has(card.id));
-  const knownCount = knownInCategory.length;
-  const knownPercentage = allCardsInCategory.length > 0 
-    ? (knownCount / allCardsInCategory.length) * 100 
-    : 0;
+  const currentCardProgress = currentCard ? cardProgress[currentCard.id] : null;
+
+  // Calculer les stats de maîtrise
+  const allCardsInCategory =
+    selectedCategory === 'all' ? ALL_FLASHCARDS : getFlashcardsByCategory(selectedCategory);
+  const masteryStats = getMasteryStats(allCardsInCategory.map((c) => c.id));
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
   };
 
-  const handleNext = () => {
-    if (currentIndex < flashcards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setIsFlipped(false);
-    }
-  };
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prevIndex) => {
+      if (prevIndex < flashcards.length - 1) {
+        setIsFlipped(false);
+        return prevIndex + 1;
+      }
+      return prevIndex;
+    });
+  }, [flashcards.length]);
 
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setIsFlipped(false);
-    }
-  };
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prevIndex) => {
+      if (prevIndex > 0) {
+        setIsFlipped(false);
+        return prevIndex - 1;
+      }
+      return prevIndex;
+    });
+  }, []);
 
-  const handleKnown = () => {
-    if (currentCard) {
-      setKnownCards(new Set([...knownCards, currentCard.id]));
+  const handleAnswer = useCallback(
+    (isCorrect: boolean) => {
+      if (!currentCard) return;
+
+      // Sauvegarder la progression
+      const newProgress = saveCardProgress(currentCard.id, isCorrect);
+      setCardProgress((prev) => ({
+        ...prev,
+        [currentCard.id]: newProgress,
+      }));
+
+      // Passer à la carte suivante après un court délai
       setTimeout(() => {
         handleNext();
       }, 300);
-    }
-  };
-
-  const handleUnknown = () => {
-    if (currentCard) {
-      const newKnown = new Set(knownCards);
-      newKnown.delete(currentCard.id);
-      setKnownCards(newKnown);
-      setTimeout(() => {
-        handleNext();
-      }, 300);
-    }
-  };
+    },
+    [currentCard, handleNext]
+  );
 
   const handleShuffle = () => {
     setFlashcards(shuffleArray(flashcards));
@@ -100,234 +136,310 @@ export default function FlashcardsPage() {
     setIsFlipped(false);
   };
 
-  const handleReset = () => {
-    setKnownCards(new Set());
-    setCurrentIndex(0);
-    setIsFlipped(false);
+  const handleResetProgress = () => {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser toute votre progression ?')) {
+      resetProgress();
+      setCardProgress({});
+      setCurrentIndex(0);
+      setIsFlipped(false);
+    }
   };
 
   // Raccourcis clavier
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return; // Ignorer si on est dans un input
+        return;
       }
 
       switch (e.key) {
         case ' ':
           e.preventDefault();
-          setIsFlipped(!isFlipped);
+          setIsFlipped((prev) => !prev);
           break;
         case 'ArrowRight':
           e.preventDefault();
-          if (currentIndex < flashcards.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-            setIsFlipped(false);
-          }
+          handleNext();
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1);
-            setIsFlipped(false);
-          }
+          handlePrevious();
           break;
         case 'k':
         case 'K':
           e.preventDefault();
-          if (currentCard) {
-            setKnownCards(new Set([...knownCards, currentCard.id]));
-            if (currentIndex < flashcards.length - 1) {
-              setTimeout(() => {
-                setCurrentIndex(currentIndex + 1);
-                setIsFlipped(false);
-              }, 300);
-            }
-          }
+          handleAnswer(true);
           break;
         case 'n':
         case 'N':
           e.preventDefault();
-          if (currentCard) {
-            const newKnown = new Set(knownCards);
-            newKnown.delete(currentCard.id);
-            setKnownCards(newKnown);
-            if (currentIndex < flashcards.length - 1) {
-              setTimeout(() => {
-                setCurrentIndex(currentIndex + 1);
-                setIsFlipped(false);
-              }, 300);
-            }
-          }
+          handleAnswer(false);
           break;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentIndex, isFlipped, flashcards, knownCards, currentCard]);
+  }, [handleNext, handlePrevious, handleAnswer]);
 
-  const isKnown = currentCard ? knownCards.has(currentCard.id) : false;
+  const getMasteryLevelLabel = (level: number | null): string => {
+    if (level === null) return 'Nouvelle';
+    if (level === 0) return 'À apprendre';
+    if (level <= 2) return 'En cours';
+    if (level <= 4) return 'Bien connue';
+    return 'Maîtrisée';
+  };
+
+  const getMasteryColor = (level: number | null): string => {
+    if (level === null) return 'bg-gray-500';
+    if (level === 0) return 'bg-red-500';
+    if (level <= 2) return 'bg-yellow-500';
+    if (level <= 4) return 'bg-blue-500';
+    return 'bg-green-500';
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Flashcards de Mémorisation</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Mémorisez rapidement les éléments essentiels pour le Tage Mage
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Flashcards de Mémorisation</h1>
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+            Système d&apos;apprentissage avec répétition espacée pour une mémorisation optimale
           </p>
         </div>
 
-        {/* Sélection de catégorie */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Catégorie</CardTitle>
-            <CardDescription>Sélectionnez une catégorie à réviser</CardDescription>
+        {/* Mode d'étude */}
+        <Card className="mb-4 md:mb-6">
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-lg md:text-xl">Mode d&apos;Étude</CardTitle>
+            <CardDescription className="text-xs md:text-sm">Choisissez comment vous voulez apprendre</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={selectedCategory === 'all' ? 'default' : 'outline'}
-                  onClick={() => setSelectedCategory('all')}
-                  size="sm"
-                >
-                  Toutes ({ALL_FLASHCARDS.length})
-                </Button>
-                {Object.values(FLASHCARD_CATEGORIES).map((category) => {
-                  const count = getFlashcardsByCategory(category.id as FlashcardCategory).length;
-                  return (
-                    <Button
-                      key={category.id}
-                      variant={selectedCategory === category.id ? 'default' : 'outline'}
-                      onClick={() => setSelectedCategory(category.id as FlashcardCategory)}
-                      size="sm"
-                    >
-                      {category.icon} {category.name} ({count})
-                    </Button>
-                  );
-                })}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={reviewMode ? 'default' : 'outline'}
-                  onClick={() => setReviewMode(!reviewMode)}
-                  size="sm"
-                >
-                  {reviewMode ? '✓' : ''} Mode Révision (cartes non connues uniquement)
-                </Button>
-              </div>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-3">
+              <Button
+                variant={studyMode === 'smart' ? 'default' : 'outline'}
+                onClick={() => setStudyMode('smart')}
+                className="flex items-center justify-center gap-2 text-sm md:text-base py-2.5 md:py-2 min-h-[44px]"
+              >
+                <Brain className="h-4 w-4" />
+                <span className="hidden sm:inline">Apprentissage Intelligent</span>
+                <span className="sm:hidden">Intelligent</span>
+              </Button>
+              <Button
+                variant={studyMode === 'review' ? 'default' : 'outline'}
+                onClick={() => setStudyMode('review')}
+                className="flex items-center justify-center gap-2 text-sm md:text-base py-2.5 md:py-2 min-h-[44px]"
+              >
+                <Target className="h-4 w-4" />
+                <span className="hidden sm:inline">Révision (cartes à revoir)</span>
+                <span className="sm:hidden">Révision</span>
+              </Button>
+              <Button
+                variant={studyMode === 'normal' ? 'default' : 'outline'}
+                onClick={() => setStudyMode('normal')}
+                className="flex items-center justify-center gap-2 text-sm md:text-base py-2.5 md:py-2 min-h-[44px]"
+              >
+                <Shuffle className="h-4 w-4" />
+                Mode Normal
+              </Button>
+            </div>
+            <div className="mt-3 md:mt-4 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+              {studyMode === 'smart' && (
+                <p>
+                  🧠 <strong>Apprentissage Intelligent</strong> : Priorise automatiquement les cartes difficiles et celles
+                  à réviser selon la répétition espacée.
+                </p>
+              )}
+              {studyMode === 'review' && (
+                <p>
+                  🎯 <strong>Révision</strong> : Affiche uniquement les cartes qui nécessitent une révision (basé sur
+                  votre progression).
+                </p>
+              )}
+              {studyMode === 'normal' && (
+                <p>
+                  🔀 <strong>Mode Normal</strong> : Toutes les cartes mélangées aléatoirement.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Statistiques */}
-        {flashcards.length > 0 && (
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Progression</p>
-                  <p className="text-2xl font-bold">
-                    {currentIndex + 1} / {flashcards.length}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Connues</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {knownCount} ({knownPercentage.toFixed(0)}%)
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Restantes</p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {allCardsInCategory.length - knownCount}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Catégorie</p>
-                  <p className="text-lg font-semibold">
-                    {selectedCategory === 'all'
-                      ? 'Toutes'
-                      : FLASHCARD_CATEGORIES[selectedCategory].name}
-                  </p>
-                </div>
+        {/* Sélection de catégorie */}
+        <Card className="mb-4 md:mb-6">
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-lg md:text-xl">Catégorie</CardTitle>
+            <CardDescription className="text-xs md:text-sm">Sélectionnez une catégorie à réviser</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                onClick={() => setSelectedCategory('all')}
+                size="sm"
+                className="text-xs md:text-sm min-h-[36px] px-3"
+              >
+                Toutes ({ALL_FLASHCARDS.length})
+              </Button>
+              {Object.values(FLASHCARD_CATEGORIES).map((category) => {
+                const count = getFlashcardsByCategory(category.id as FlashcardCategory).length;
+                return (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.id ? 'default' : 'outline'}
+                    onClick={() => setSelectedCategory(category.id as FlashcardCategory)}
+                    size="sm"
+                    className="text-xs md:text-sm min-h-[36px] px-2 md:px-3"
+                  >
+                    {category.icon} <span className="hidden sm:inline">{category.name}</span> ({count})
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Statistiques de maîtrise */}
+        <Card className="mb-4 md:mb-6">
+          <CardContent className="pt-4 md:pt-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+              <div className="text-center">
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">Nouvelles</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-600">{masteryStats.new}</p>
               </div>
-              <div className="mt-4">
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
+              <div className="text-center">
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">En cours</p>
+                <p className="text-xl md:text-2xl font-bold text-yellow-600">{masteryStats.learning}</p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="text-center">
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">Maîtrisées</p>
+                <p className="text-xl md:text-2xl font-bold text-green-600">{masteryStats.mastered}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">Progression</p>
+                <p className="text-xl md:text-2xl font-bold">
+                  {currentIndex + 1} / {flashcards.length}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">Taux de réussite</p>
+                <p className="text-xl md:text-2xl font-bold text-blue-600">
+                  {currentCardProgress
+                    ? currentCardProgress.timesReviewed > 0
+                      ? Math.round(
+                          (currentCardProgress.timesCorrect / currentCardProgress.timesReviewed) * 100
+                        )
+                      : 0
+                    : 0}
+                  %
+                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div
+                  className="bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 h-3 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${(masteryStats.mastered / masteryStats.total) * 100}%`,
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                {Math.round((masteryStats.mastered / masteryStats.total) * 100)}% de maîtrise globale
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Flashcard principale */}
         {currentCard ? (
-          <div className="max-w-2xl mx-auto mb-6">
+          <div className="max-w-2xl mx-auto mb-4 md:mb-6">
             <Card
-              className="cursor-pointer transition-all duration-300 hover:shadow-lg"
+              className="cursor-pointer transition-all duration-300 hover:shadow-lg border-2 touch-none select-none"
               onClick={handleFlip}
             >
-              <CardContent className="p-12 min-h-[400px] flex items-center justify-center">
+              <CardContent className="p-6 md:p-12 min-h-[300px] md:min-h-[400px] flex flex-col items-center justify-center">
+                {/* Barre de progression de maîtrise */}
+                {currentCardProgress && (
+                  <div className="w-full mb-4">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Niveau: {currentCardProgress.masteryLevel}/5
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {currentCardProgress.streak > 0 && `🔥 ${currentCardProgress.streak} de suite`}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div
+                        className={`${getMasteryColor(currentCardProgress.masteryLevel)} h-2 rounded-full transition-all duration-300`}
+                        style={{ width: `${(currentCardProgress.masteryLevel / 5) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-center w-full">
                   <div
-                    className={`text-4xl md:text-6xl font-bold mb-4 transition-opacity duration-300 ${
+                    className={`text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold mb-3 md:mb-4 transition-opacity duration-300 leading-tight ${
                       isFlipped ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'
                     }`}
                   >
                     {currentCard.front}
                   </div>
                   <div
-                    className={`text-4xl md:text-6xl font-bold mb-4 transition-opacity duration-300 ${
+                    className={`transition-opacity duration-300 ${
                       isFlipped ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'
                     }`}
                   >
-                    {currentCard.back}
+                    <div className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold mb-3 md:mb-4 leading-tight">
+                      {currentCard.back}
+                    </div>
+                    {/* Exemples pour les critères de divisibilité */}
+                    {isFlipped && currentCard.examples && currentCard.examples.length > 0 && (
+                      <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200 dark:border-gray-700 w-full">
+                        <p className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 md:mb-3">
+                          Exemples :
+                        </p>
+                        <div className="space-y-1.5 md:space-y-2 text-left max-w-md mx-auto">
+                          {currentCard.examples.map((example, idx) => (
+                            <div
+                              key={idx}
+                              className="text-xs md:text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2 md:px-3 py-1.5 md:py-2 rounded"
+                            >
+                              {example}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                    Cliquez pour retourner
+                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-3 md:mt-4">
+                    {isFlipped ? 'Appuyez pour voir la question' : 'Appuyez pour voir la réponse'}
                   </p>
+                </div>
+
+                {/* Indicateur de maîtrise */}
+                <div className="mt-4">
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-medium ${getMasteryColor(
+                      currentCardProgress?.masteryLevel ?? null
+                    )} text-white`}
+                  >
+                    {getMasteryLevelLabel(currentCardProgress?.masteryLevel ?? null)}
+                  </span>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Indicateur de difficulté */}
-            {currentCard.difficulty && (
-              <div className="text-center mt-2">
-                <span
-                  className={`text-xs px-2 py-1 rounded ${
-                    currentCard.difficulty === 'easy'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : currentCard.difficulty === 'medium'
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                  }`}
-                >
-                  {currentCard.difficulty === 'easy'
-                    ? 'Facile'
-                    : currentCard.difficulty === 'medium'
-                      ? 'Moyen'
-                      : 'Difficile'}
-                </span>
-                {isKnown && (
-                  <span className="ml-2 text-xs px-2 py-1 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    ✓ Connue
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         ) : (
           <Card className="max-w-2xl mx-auto mb-6">
             <CardContent className="p-12 text-center">
               <p className="text-xl text-gray-600 dark:text-gray-400">
-                Aucune flashcard disponible pour cette catégorie
+                {studyMode === 'review'
+                  ? '🎉 Toutes les cartes sont à jour ! Aucune révision nécessaire.'
+                  : 'Aucune flashcard disponible pour cette catégorie'}
               </p>
             </CardContent>
           </Card>
@@ -336,66 +448,82 @@ export default function FlashcardsPage() {
         {/* Contrôles */}
         {currentCard && (
           <div className="max-w-2xl mx-auto">
-            <div className="flex flex-wrap gap-4 justify-center mb-4">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentIndex === 0}
-                size="lg"
+            <div className="flex flex-wrap gap-2 md:gap-4 justify-center mb-3 md:mb-4">
+              <Button 
+                variant="outline" 
+                onClick={handlePrevious} 
+                disabled={currentIndex === 0} 
+                className="min-h-[48px] md:min-h-[44px] text-sm md:text-base flex-1 sm:flex-initial"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Précédent
+                <ArrowLeft className="h-4 w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Précédent</span>
+                <span className="sm:hidden">Préc.</span>
               </Button>
-              <Button variant="outline" onClick={handleFlip} size="lg">
-                <RotateCcw className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                onClick={handleFlip} 
+                className="min-h-[48px] md:min-h-[44px] text-sm md:text-base flex-1 sm:flex-initial"
+              >
+                <RotateCcw className="h-4 w-4 mr-1 md:mr-2" />
                 Retourner
               </Button>
               <Button
                 variant="outline"
                 onClick={handleNext}
                 disabled={currentIndex === flashcards.length - 1}
-                size="lg"
+                className="min-h-[48px] md:min-h-[44px] text-sm md:text-base flex-1 sm:flex-initial"
               >
-                Suivant
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <span className="hidden sm:inline">Suivant</span>
+                <span className="sm:hidden">Suiv.</span>
+                <ArrowRight className="h-4 w-4 ml-1 md:ml-2" />
               </Button>
-              <Button variant="outline" onClick={handleShuffle} size="lg">
-                <Shuffle className="h-4 w-4 mr-2" />
-                Mélanger
-              </Button>
-              <Button variant="outline" onClick={handleReset} size="lg">
-                Réinitialiser
+              <Button 
+                variant="outline" 
+                onClick={handleShuffle} 
+                className="min-h-[48px] md:min-h-[44px] text-sm md:text-base flex-1 sm:flex-initial"
+              >
+                <Shuffle className="h-4 w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Mélanger</span>
+                <span className="sm:hidden">Mix</span>
               </Button>
             </div>
 
-            {/* Boutons de mémorisation */}
-            <div className="flex gap-4 justify-center">
-              <Button
-                variant="outline"
-                onClick={handleUnknown}
-                className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
-                size="lg"
-              >
-                <X className="h-4 w-4 mr-2" />
-                À revoir
-              </Button>
-              <Button
-                variant="default"
-                onClick={handleKnown}
-                className="bg-green-600 hover:bg-green-700 text-white"
-                size="lg"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Je connais
+            {/* Boutons de réponse - seulement si la carte est retournée */}
+            {isFlipped && (
+              <div className="flex gap-3 md:gap-4 justify-center mb-3 md:mb-4">
+                <Button
+                  variant="outline"
+                  onClick={() => handleAnswer(false)}
+                  className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20 min-h-[56px] md:min-h-[48px] text-base md:text-base flex-1 sm:flex-initial px-4 md:px-6"
+                >
+                  <X className="h-5 w-5 md:h-4 md:w-4 mr-2" />
+                  <span className="hidden sm:inline">Je ne connais pas</span>
+                  <span className="sm:hidden">Non</span>
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => handleAnswer(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white min-h-[56px] md:min-h-[48px] text-base md:text-base flex-1 sm:flex-initial px-4 md:px-6"
+                >
+                  <Check className="h-5 w-5 md:h-4 md:w-4 mr-2" />
+                  <span className="hidden sm:inline">Je connais</span>
+                  <span className="sm:hidden">Oui</span>
+                </Button>
+              </div>
+            )}
+
+            <div className="text-center">
+              <Button variant="ghost" onClick={handleResetProgress} size="sm" className="text-red-600">
+                Réinitialiser la progression
               </Button>
             </div>
           </div>
         )}
 
-        {/* Raccourcis clavier */}
-        <Card className="mt-8 max-w-2xl mx-auto">
+        {/* Raccourcis clavier - masqué sur mobile */}
+        <Card className="mt-6 md:mt-8 max-w-2xl mx-auto hidden md:block">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
               <BookOpen className="h-5 w-5" />
               Raccourcis Clavier
             </CardTitle>
@@ -415,7 +543,7 @@ export default function FlashcardsPage() {
                 <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">K</kbd> - Je connais
               </div>
               <div>
-                <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">N</kbd> - À revoir
+                <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">N</kbd> - Je ne connais pas
               </div>
             </div>
           </CardContent>
@@ -424,4 +552,3 @@ export default function FlashcardsPage() {
     </div>
   );
 }
-
