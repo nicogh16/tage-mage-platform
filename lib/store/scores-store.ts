@@ -177,8 +177,9 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
     return 0;
   },
   getTageMageScore: () => {
-    // Calculate average of 3 groups, then multiply by 10 to get score out of 600
+    // Calculate average of 3 groups, then multiply by 2 × 10 = 20 to get score out of 600
     // Each group is out of 30 (2 sections × 15)
+    // Formula: (average of 3 groups / 30) × 2 × 10 = average × 20
     const group1Avg = get().getAverageByGroup('groupe1');
     const group2Avg = get().getAverageByGroup('groupe2');
     const group3Avg = get().getAverageByGroup('groupe3');
@@ -186,9 +187,9 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
     const validGroups = [group1Avg, group2Avg, group3Avg].filter((avg) => avg > 0);
     if (validGroups.length === 0) return 0;
     
-    // Average of groups (out of 30), then multiply by 10
+    // Average of groups (out of 30), then multiply by 2 × 10 = 20
     const averageOfGroups = validGroups.reduce((sum, avg) => sum + avg, 0) / validGroups.length;
-    return Math.round(averageOfGroups * 10 * 10) / 10;
+    return Math.round(averageOfGroups * 2 * 10 * 10) / 10;
   },
   getCompleteTestsTageMageScores: () => {
     const testsList = get().getTestsList();
@@ -198,14 +199,18 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
       const testScores = get().getScoresByTest(testName);
       // A test is complete if it has all 6 sections
       if (testScores.length === 6) {
-        const group1 = (testScores.find(s => s.section === 'conditions_minimales')?.score || 0) +
-                     (testScores.find(s => s.section === 'calcul_mental')?.score || 0);
-        const group2 = (testScores.find(s => s.section === 'expression')?.score || 0) +
-                     (testScores.find(s => s.section === 'comprehension_textes')?.score || 0);
-        const group3 = (testScores.find(s => s.section === 'resolution_problemes')?.score || 0) +
-                     (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0);
+        // Groupe 1: calcul_mental + conditions_minimales
+        const group1 = (testScores.find(s => s.section === 'calcul_mental')?.score || 0) +
+                     (testScores.find(s => s.section === 'conditions_minimales')?.score || 0);
+        // Groupe 2: comprehension_textes + expression
+        const group2 = (testScores.find(s => s.section === 'comprehension_textes')?.score || 0) +
+                     (testScores.find(s => s.section === 'expression')?.score || 0);
+        // Groupe 3: raisonnement_logique + resolution_problemes
+        const group3 = (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0) +
+                     (testScores.find(s => s.section === 'resolution_problemes')?.score || 0);
         const avgGroups = (group1 + group2 + group3) / 3;
-        const tageMageScore = Math.round(avgGroups * 10);
+        // Formula: average × 2 × 10 = average × 20
+        const tageMageScore = Math.round(avgGroups * 2 * 10);
         scores.push(tageMageScore);
       }
     });

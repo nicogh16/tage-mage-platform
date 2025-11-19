@@ -212,19 +212,21 @@ export default function ScoresPage() {
                         {testsList.map((test) => {
                           const testScores = getScoresByTest(test);
                           const totalScore = getTestTotalScore(test);
-                          // Calculate Tage Mage score: average of 3 groups × 10
-                          // Each group = sum of 2 sections (max 30)
-                          // If we have all 6 sections, calculate properly
+                          // Calculate Tage Mage score: average of 3 groups × 2 × 10 = × 20
+                          // Groupe 1: calcul_mental + conditions_minimales /30
+                          // Groupe 2: comprehension_textes + expression /30
+                          // Groupe 3: raisonnement_logique + resolution_problemes /30
                           let tageMageScore = 0;
                           if (testScores.length === 6) {
-                            const group1 = (testScores.find(s => s.section === 'conditions_minimales')?.score || 0) +
-                                         (testScores.find(s => s.section === 'calcul_mental')?.score || 0);
-                            const group2 = (testScores.find(s => s.section === 'expression')?.score || 0) +
-                                         (testScores.find(s => s.section === 'comprehension_textes')?.score || 0);
-                            const group3 = (testScores.find(s => s.section === 'resolution_problemes')?.score || 0) +
-                                         (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0);
+                            const group1 = (testScores.find(s => s.section === 'calcul_mental')?.score || 0) +
+                                         (testScores.find(s => s.section === 'conditions_minimales')?.score || 0);
+                            const group2 = (testScores.find(s => s.section === 'comprehension_textes')?.score || 0) +
+                                         (testScores.find(s => s.section === 'expression')?.score || 0);
+                            const group3 = (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0) +
+                                         (testScores.find(s => s.section === 'resolution_problemes')?.score || 0);
                             const avgGroups = (group1 + group2 + group3) / 3;
-                            tageMageScore = Math.round(avgGroups * 10);
+                            // Formula: average × 2 × 10 = average × 20
+                            tageMageScore = Math.round(avgGroups * 2 * 10);
                           } else {
                             // Fallback: simple calculation if not all sections
                             tageMageScore = Math.round((totalScore / 90) * 600);

@@ -85,14 +85,18 @@ export default function TestsBlancsPage() {
     const testScores = getScoresByTest(testId);
     if (testScores.length !== 6) return null; // Test incomplet
     
-    const group1 = (testScores.find(s => s.section === 'conditions_minimales')?.score || 0) +
-                 (testScores.find(s => s.section === 'calcul_mental')?.score || 0);
-    const group2 = (testScores.find(s => s.section === 'expression')?.score || 0) +
-                 (testScores.find(s => s.section === 'comprehension_textes')?.score || 0);
-    const group3 = (testScores.find(s => s.section === 'resolution_problemes')?.score || 0) +
-                 (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0);
+    // Groupe 1: calcul_mental + conditions_minimales /30
+    const group1 = (testScores.find(s => s.section === 'calcul_mental')?.score || 0) +
+                 (testScores.find(s => s.section === 'conditions_minimales')?.score || 0);
+    // Groupe 2: comprehension_textes + expression /30
+    const group2 = (testScores.find(s => s.section === 'comprehension_textes')?.score || 0) +
+                 (testScores.find(s => s.section === 'expression')?.score || 0);
+    // Groupe 3: raisonnement_logique + resolution_problemes /30
+    const group3 = (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0) +
+                 (testScores.find(s => s.section === 'resolution_problemes')?.score || 0);
     const avgGroups = (group1 + group2 + group3) / 3;
-    return Math.round(avgGroups * 10);
+    // Formula: average × 2 × 10 = average × 20
+    return Math.round(avgGroups * 2 * 10);
   };
 
   const handleAddScore = (testId: string) => {
