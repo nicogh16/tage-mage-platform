@@ -220,7 +220,7 @@ export default function ScoresPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Scores par Test</CardTitle>
-                    <CardDescription>Vue d'ensemble de tous vos tests</CardDescription>
+                    <CardDescription>Vue d&apos;ensemble de tous vos tests</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {testsList.length > 0 ? (
@@ -318,7 +318,7 @@ export default function ScoresPage() {
                       </div>
                     ) : (
                       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                        Aucun score de test enregistré. Sélectionnez un test lors de l'ajout d'un score.
+                        Aucun score de test enregistré. Sélectionnez un test lors de l&apos;ajout d&apos;un score.
                       </div>
                     )}
                   </CardContent>
