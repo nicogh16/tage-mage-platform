@@ -123,40 +123,6 @@ export default function TestsBlancsPage() {
           </p>
         </div>
 
-        {/* Info Card */}
-        <Card className="mb-8 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Tests Officiels
-            </CardTitle>
-            <CardDescription>
-              Ces tests sont proposés par les organisateurs officiels du Tage Mage et des concours.
-              Ils sont les plus proches des conditions réelles d&apos;examen.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p className="mb-2">
-                <strong>💡 Comment obtenir les PDFs officiels ?</strong>
-              </p>
-              <p className="mb-3">
-                Les tests blancs officiels sont généralement gratuits mais nécessitent une inscription sur les sites officiels.
-                Consultez le guide complet pour savoir où les télécharger.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open('/pdfs/tests-blancs/HOW_TO_ADD_PDFS.md', '_blank')}
-                className="text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Voir le guide d&apos;ajout des PDFs
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Tests List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {availableTests.length > 0 ? (
