@@ -83,7 +83,9 @@ export default function TestsBlancsPage() {
   // Fonction pour calculer le score Tage Mage d'un test
   const getTestTageMageScore = (testId: string) => {
     const testScores = getScoresByTest(testId);
-    if (testScores.length !== 6) return null; // Test incomplet
+    // getScoresByTest already handles duplicates, but double-check we have exactly 6 unique sections
+    const uniqueSections = new Set(testScores.map(s => s.section));
+    if (uniqueSections.size !== 6) return null; // Test incomplet ou doublons
     
     // Groupe 1: calcul_mental + conditions_minimales /30
     const group1 = (testScores.find(s => s.section === 'calcul_mental')?.score || 0) +
@@ -96,7 +98,7 @@ export default function TestsBlancsPage() {
                  (testScores.find(s => s.section === 'resolution_problemes')?.score || 0);
     const avgGroups = (group1 + group2 + group3) / 3;
     // Formula: average × 2 × 10 = average × 20
-    return Math.round(avgGroups * 2 * 10);
+    return Math.round(avgGroups * 2 * 10 * 10) / 10;
   };
 
   const handleAddScore = (testId: string) => {

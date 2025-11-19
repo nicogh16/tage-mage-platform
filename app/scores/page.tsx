@@ -218,15 +218,25 @@ export default function ScoresPage() {
                           // Groupe 3: raisonnement_logique + resolution_problemes /30
                           let tageMageScore = 0;
                           if (testScores.length === 6) {
-                            const group1 = (testScores.find(s => s.section === 'calcul_mental')?.score || 0) +
-                                         (testScores.find(s => s.section === 'conditions_minimales')?.score || 0);
-                            const group2 = (testScores.find(s => s.section === 'comprehension_textes')?.score || 0) +
-                                         (testScores.find(s => s.section === 'expression')?.score || 0);
-                            const group3 = (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0) +
-                                         (testScores.find(s => s.section === 'resolution_problemes')?.score || 0);
+                            // Get unique scores (most recent per section)
+                            const uniqueScores = new Map();
+                            testScores.forEach(s => {
+                              const existing = uniqueScores.get(s.section);
+                              if (!existing || new Date(s.date) > new Date(existing.date)) {
+                                uniqueScores.set(s.section, s);
+                              }
+                            });
+                            const scores = Array.from(uniqueScores.values());
+                            
+                            const group1 = (scores.find(s => s.section === 'calcul_mental')?.score || 0) +
+                                         (scores.find(s => s.section === 'conditions_minimales')?.score || 0);
+                            const group2 = (scores.find(s => s.section === 'comprehension_textes')?.score || 0) +
+                                         (scores.find(s => s.section === 'expression')?.score || 0);
+                            const group3 = (scores.find(s => s.section === 'raisonnement_logique')?.score || 0) +
+                                         (scores.find(s => s.section === 'resolution_problemes')?.score || 0);
                             const avgGroups = (group1 + group2 + group3) / 3;
                             // Formula: average × 2 × 10 = average × 20
-                            tageMageScore = Math.round(avgGroups * 2 * 10);
+                            tageMageScore = Math.round(avgGroups * 2 * 10 * 10) / 10;
                           } else {
                             // Fallback: simple calculation if not all sections
                             tageMageScore = Math.round((totalScore / 90) * 600);

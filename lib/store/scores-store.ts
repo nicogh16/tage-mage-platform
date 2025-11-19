@@ -108,7 +108,20 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
     return get().scores.filter((s) => s.section === section);
   },
   getScoresByTest: (testName) => {
-    return get().scores.filter((s) => s.test_name === testName);
+    // Get all scores for this test, but if there are duplicates (same section),
+    // keep only the most recent one (by date)
+    const allScores = get().scores.filter((s) => s.test_name === testName);
+    const scoresBySection = new Map<string, typeof allScores[0]>();
+    
+    // Keep only the most recent score for each section
+    allScores.forEach((score) => {
+      const existing = scoresBySection.get(score.section);
+      if (!existing || new Date(score.date) > new Date(existing.date)) {
+        scoresBySection.set(score.section, score);
+      }
+    });
+    
+    return Array.from(scoresBySection.values());
   },
   getTestsList: () => {
     const tests = new Set<string>();
@@ -179,7 +192,7 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
   getTageMageScore: () => {
     // Calculate average of 3 groups, then multiply by 2 × 10 = 20 to get score out of 600
     // Each group is out of 30 (2 sections × 15)
-    // Formula: (average of 3 groups / 30) × 2 × 10 = average × 20
+    // Formula: (average of 3 groups) × 2 × 10 = average × 20
     const group1Avg = get().getAverageByGroup('groupe1');
     const group2Avg = get().getAverageByGroup('groupe2');
     const group3Avg = get().getAverageByGroup('groupe3');
