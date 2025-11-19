@@ -271,6 +271,8 @@ export default function DashboardPage() {
                 const average = getAverageBySection(sectionId);
                 const colors = COLOR_CLASSES[section.color];
                 const sectionScores = scores.filter((s) => s.section === sectionId);
+                // Calculate width percentage, ensure it's at least 0 and at most 100
+                const widthPercent = Math.max(0, Math.min(100, (average / MAX_SCORE_PER_SECTION) * 100));
                 
                 return (
                   <Link
@@ -285,10 +287,13 @@ export default function DashboardPage() {
                           {average > 0 ? average.toFixed(1) : '-'}/{MAX_SCORE_PER_SECTION}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 relative">
                         <div
-                          className={`h-2 rounded-full ${colors.bg}`}
-                          style={{ width: `${(average / MAX_SCORE_PER_SECTION) * 100}%` }}
+                          className={`h-2 rounded-full ${colors.bg} transition-all duration-300`}
+                          style={{ 
+                            width: `${widthPercent}%`,
+                            minWidth: average > 0 ? '2px' : '0px' // Ensure bar is visible if there's a score
+                          }}
                         />
                       </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
