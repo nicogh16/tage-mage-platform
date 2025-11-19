@@ -6,136 +6,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Download, FileText, BookOpen, Clock, Award, AlertCircle } from 'lucide-react';
 
-// Tests blancs officiels Tage Mage
-const OFFICIAL_TESTS = [
-  {
-    id: 'fnege-officiel-2024',
-    name: 'Test Blanc Officiel Fnege 2024',
-    source: 'Fnege (Fondation Nationale pour l\'Enseignement de la Gestion des Entreprises)',
-    description: 'Test blanc officiel proposé par la Fnege, organisateur du Tage Mage',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/fnege-2024.pdf',
-    available: true,
-  },
-  {
-    id: 'fnege-officiel-2023',
-    name: 'Test Blanc Officiel Fnege 2023',
-    source: 'Fnege',
-    description: 'Test blanc officiel de l\'année précédente',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/fnege-2023.pdf',
-    available: true,
-  },
-  {
-    id: 'fnege-annales',
-    name: 'Annales Officielles Fnege',
-    source: 'Fnege',
-    description: 'Annales des sessions précédentes du Tage Mage',
-    duration: 'Variable',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/fnege-annales.pdf',
-    available: true,
-  },
-  {
-    id: 'concours-ecricome',
-    name: 'Tests Blancs Ecricome',
-    source: 'Ecricome',
-    description: 'Tests blancs proposés par Ecricome pour la préparation au Tage Mage',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/ecricome.pdf',
-    available: true,
-  },
-  {
-    id: 'concours-pass',
-    name: 'Tests Blancs Pass',
-    source: 'Pass',
-    description: 'Tests blancs officiels du concours Pass',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/pass.pdf',
-    available: true,
-  },
-  {
-    id: 'concours-sesame',
-    name: 'Tests Blancs Sésame',
-    source: 'Sésame',
-    description: 'Tests blancs officiels du concours Sésame',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/sesame.pdf',
-    available: true,
-  },
-  {
-    id: 'concours-acces',
-    name: 'Tests Blancs Accès',
-    source: 'Accès',
-    description: 'Tests blancs officiels du concours Accès',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/acces.pdf',
-    available: true,
-  },
-  {
-    id: 'concours-link',
-    name: 'Tests Blancs Link',
-    source: 'Link',
-    description: 'Tests blancs officiels du concours Link',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/link.pdf',
-    available: true,
-  },
-  {
-    id: 'concours-ambitions',
-    name: 'Tests Blancs Ambitions+',
-    source: 'Ambitions+',
-    description: 'Tests blancs officiels du concours Ambitions+',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/ambitions.pdf',
-    available: true,
-  },
-  {
-    id: 'concours-team',
-    name: 'Tests Blancs Team',
-    source: 'Team',
-    description: 'Tests blancs officiels du concours Team',
-    duration: '90 minutes',
-    sections: 6,
-    official: true,
-    pdfPath: '/pdfs/tests-blancs/team.pdf',
-    available: true,
-  },
+// Liste des PDFs disponibles dans le dossier tests-blancs
+// Les fichiers sont détectés automatiquement
+const AVAILABLE_PDFS = [
+  'test-1.pdf',
+  'test-2.pdf',
+  'test-3.pdf',
+  'test-4.pdf',
+  'test-5.pdf',
+  'test-6.pdf',
+  'test-7.pdf',
+  'test-8.pdf',
+  'test-9.pdf',
+  'test-10.pdf',
 ];
 
+// Fonction pour générer les informations d'un test à partir du nom du fichier
+const getTestInfo = (filename: string) => {
+  const match = filename.match(/test-(\d+)\.pdf/i);
+  const number = match ? match[1] : filename.replace('.pdf', '');
+  
+  return {
+    id: filename.replace('.pdf', ''),
+    name: `Test Blanc ${number}`,
+    source: 'Tage Mage',
+    description: `Test blanc numéro ${number} pour s'entraîner au Tage Mage`,
+    duration: '90 minutes',
+    sections: 6,
+    official: true,
+    pdfPath: `/pdfs/tests-blancs/${filename}`,
+    available: true,
+  };
+};
+
+// Générer la liste des tests à partir des PDFs disponibles
+const OFFICIAL_TESTS = AVAILABLE_PDFS.map(getTestInfo);
+
 export default function TestsBlancsPage() {
-  const [pdfStatus, setPdfStatus] = useState<Record<string, boolean>>({});
+  const [availableTests, setAvailableTests] = useState<typeof OFFICIAL_TESTS>([]);
 
   useEffect(() => {
-    // Vérifier l'existence des PDFs
+    // Vérifier l'existence des PDFs et mettre à jour la liste
     const checkPDFs = async () => {
-      const status: Record<string, boolean> = {};
-      for (const test of OFFICIAL_TESTS) {
+      const tests: typeof OFFICIAL_TESTS = [];
+      
+      for (const filename of AVAILABLE_PDFS) {
+        const test = getTestInfo(filename);
         try {
           const response = await fetch(test.pdfPath, { method: 'HEAD' });
-          status[test.id] = response.ok;
+          if (response.ok) {
+            tests.push(test);
+          }
         } catch {
-          status[test.id] = false;
+          // PDF non disponible, on ne l'ajoute pas à la liste
         }
       }
-      setPdfStatus(status);
+      
+      setAvailableTests(tests);
     };
     checkPDFs();
   }, []);
@@ -200,7 +127,8 @@ export default function TestsBlancsPage() {
 
         {/* Tests List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {OFFICIAL_TESTS.map((test) => (
+          {availableTests.length > 0 ? (
+            availableTests.map((test) => (
             <Card key={test.id} className="flex flex-col">
               <CardHeader>
                 <div className="flex items-start justify-between mb-2">
@@ -227,48 +155,43 @@ export default function TestsBlancsPage() {
                     {test.sections} sections
                   </div>
                 </div>
-                {test.available ? (
-                  pdfStatus[test.id] === false ? (
-                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-                        <div className="text-xs text-yellow-800 dark:text-yellow-300">
-                          <p className="font-medium mb-1">PDF non disponible</p>
-                          <p className="mb-2">Placez le fichier <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">{test.pdfPath.replace('/pdfs/tests-blancs/', '')}</code> dans le dossier <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">public/pdfs/tests-blancs/</code></p>
-                          <p className="text-yellow-700 dark:text-yellow-400">
-                            📖 Consultez le guide pour savoir où télécharger les PDFs officiels
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button
-                        className="flex-1"
-                        variant="default"
-                        onClick={() => handleOpenPDF(test.pdfPath)}
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Ouvrir
-                      </Button>
-                      <Button
-                        className="flex-1"
-                        variant="outline"
-                        onClick={() => handleDownloadPDF(test.pdfPath, `${test.id}.pdf`)}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Télécharger
-                      </Button>
-                    </div>
-                  )
-                ) : (
-                  <Button disabled className="w-full" variant="outline">
-                    Bientôt disponible
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    variant="default"
+                    onClick={() => handleOpenPDF(test.pdfPath)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Ouvrir
                   </Button>
-                )}
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => handleDownloadPDF(test.pdfPath, `${test.id}.pdf`)}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          ))}
+            ))
+          ) : (
+            <Card className="col-span-full">
+              <CardContent className="py-8 text-center">
+                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">
+                  Aucun PDF trouvé dans le dossier tests-blancs.
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                  Placez vos fichiers PDF (test-1.pdf, test-2.pdf, etc.) dans le dossier{' '}
+                  <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    public/pdfs/tests-blancs/
+                  </code>
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Tips Section */}
