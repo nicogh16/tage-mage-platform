@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, BookOpen, Clock, Award, AlertCircle } from 'lucide-react';
+import { Download, FileText, BookOpen, Clock, Award, AlertCircle, Target, Plus } from 'lucide-react';
+import { useScoresStore } from '@/lib/store/scores-store';
+import { useAuthStore } from '@/lib/store/auth-store';
+import { MAX_SCORE_TAGE_MAGE } from '@/lib/constants';
 
 // Liste des PDFs disponibles dans le dossier tests-blancs
 // Les fichiers sont détectés automatiquement
@@ -43,7 +47,16 @@ const getTestInfo = (filename: string) => {
 const OFFICIAL_TESTS = AVAILABLE_PDFS.map(getTestInfo);
 
 export default function TestsBlancsPage() {
+  const router = useRouter();
   const [availableTests, setAvailableTests] = useState<typeof OFFICIAL_TESTS>([]);
+  const { scores, fetchScores, getScoresByTest, getTestTotalScore } = useScoresStore();
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (user) {
+      fetchScores();
+    }
+  }, [user, fetchScores]);
 
   useEffect(() => {
     // Vérifier l'existence des PDFs et mettre à jour la liste
@@ -66,6 +79,25 @@ export default function TestsBlancsPage() {
     };
     checkPDFs();
   }, []);
+
+  // Fonction pour calculer le score Tage Mage d'un test
+  const getTestTageMageScore = (testId: string) => {
+    const testScores = getScoresByTest(testId);
+    if (testScores.length !== 6) return null; // Test incomplet
+    
+    const group1 = (testScores.find(s => s.section === 'conditions_minimales')?.score || 0) +
+                 (testScores.find(s => s.section === 'calcul_mental')?.score || 0);
+    const group2 = (testScores.find(s => s.section === 'expression')?.score || 0) +
+                 (testScores.find(s => s.section === 'comprehension_textes')?.score || 0);
+    const group3 = (testScores.find(s => s.section === 'resolution_problemes')?.score || 0) +
+                 (testScores.find(s => s.section === 'raisonnement_logique')?.score || 0);
+    const avgGroups = (group1 + group2 + group3) / 3;
+    return Math.round(avgGroups * 10);
+  };
+
+  const handleAddScore = (testId: string) => {
+    router.push(`/scores?test=${testId}`);
+  };
 
   const handleOpenPDF = (pdfPath: string) => {
     window.open(pdfPath, '_blank');
@@ -128,54 +160,81 @@ export default function TestsBlancsPage() {
         {/* Tests List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {availableTests.length > 0 ? (
-            availableTests.map((test) => (
-            <Card key={test.id} className="flex flex-col">
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <CardTitle className="text-lg">{test.name}</CardTitle>
-                  {test.official && (
-                    <Award className="h-5 w-5 text-yellow-500 flex-shrink-0 ml-2" />
-                  )}
-                </div>
-                <CardDescription className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {test.source}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-1">
-                  {test.description}
-                </p>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Durée : {test.duration}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    {test.sections} sections
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1"
-                    variant="default"
-                    onClick={() => handleOpenPDF(test.pdfPath)}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Ouvrir
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    variant="outline"
-                    onClick={() => handleDownloadPDF(test.pdfPath, `${test.id}.pdf`)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Télécharger
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            ))
+            availableTests.map((test) => {
+              const testScore = getTestTageMageScore(test.id);
+              const testScores = getScoresByTest(test.id);
+              const isComplete = testScores.length === 6;
+              
+              return (
+                <Card key={test.id} className="flex flex-col">
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-2">
+                      <CardTitle className="text-lg">{test.name}</CardTitle>
+                      {test.official && (
+                        <Award className="h-5 w-5 text-yellow-500 flex-shrink-0 ml-2" />
+                      )}
+                    </div>
+                    <CardDescription className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {test.source}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-1">
+                      {test.description}
+                    </p>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                        <Clock className="h-4 w-4 mr-2" />
+                        Durée : {test.duration}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        {test.sections} sections
+                      </div>
+                      {testScore !== null && (
+                        <div className="flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">
+                          <Target className="h-4 w-4 mr-2" />
+                          Score : {testScore}/{MAX_SCORE_TAGE_MAGE}
+                        </div>
+                      )}
+                      {testScores.length > 0 && testScores.length < 6 && (
+                        <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
+                          Test en cours : {testScores.length}/6 sections complétées
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Button
+                          className="flex-1"
+                          variant="default"
+                          onClick={() => handleOpenPDF(test.pdfPath)}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Ouvrir
+                        </Button>
+                        <Button
+                          className="flex-1"
+                          variant="outline"
+                          onClick={() => handleDownloadPDF(test.pdfPath, `${test.id}.pdf`)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Télécharger
+                        </Button>
+                      </div>
+                      <Button
+                        className="w-full"
+                        variant={isComplete ? "outline" : "default"}
+                        onClick={() => handleAddScore(test.id)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        {isComplete ? 'Modifier le score' : 'Ajouter un score'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           ) : (
             <Card className="col-span-full">
               <CardContent className="py-8 text-center">

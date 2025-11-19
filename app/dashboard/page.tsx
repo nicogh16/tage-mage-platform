@@ -13,7 +13,20 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const { scores, loading, fetchScores, getAverageBySection, getGlobalAverage, getBestSection, getWorstSection, getTageMageScore, getAverageByGroup } = useScoresStore();
+  const { 
+    scores, 
+    loading, 
+    fetchScores, 
+    getAverageBySection, 
+    getGlobalAverage, 
+    getBestSection, 
+    getWorstSection, 
+    getTageMageScore, 
+    getAverageByGroup,
+    getAverageTageMageFromCompleteTests,
+    getMinMaxTageMageFromCompleteTests,
+    getSectionStatsFromCompleteTests
+  } = useScoresStore();
   const { user, loading: authLoading } = useAuthStore();
 
   useEffect(() => {
@@ -36,12 +49,21 @@ export default function DashboardPage() {
   const globalAverage = getGlobalAverage();
   const bestSection = getBestSection();
   const worstSection = getWorstSection();
-  const tageMageScore = getTageMageScore();
+  // Use average from complete tests, fallback to general calculation
+  const averageFromCompleteTests = getAverageTageMageFromCompleteTests();
+  const tageMageScore = averageFromCompleteTests > 0 ? averageFromCompleteTests : getTageMageScore();
+  const minMaxScores = getMinMaxTageMageFromCompleteTests();
 
-  const radarData = SECTION_IDS.map((section) => ({
-    section,
-    average: getAverageBySection(section),
-  }));
+  // Radar chart data with average, min, max from complete tests
+  const radarData = SECTION_IDS.map((section) => {
+    const stats = getSectionStatsFromCompleteTests(section);
+    return {
+      section,
+      average: stats.average > 0 ? stats.average : getAverageBySection(section),
+      min: stats.min,
+      max: stats.max,
+    };
+  });
 
   const recentScores = scores.slice(0, 5);
 
@@ -66,6 +88,14 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{tageMageScore.toFixed(0)}</div>
               <p className="text-xs text-gray-500 dark:text-gray-400">sur {MAX_SCORE_TAGE_MAGE}</p>
+              {minMaxScores && (
+                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Min: <span className="text-red-600 dark:text-red-400">{minMaxScores.min}</span> | 
+                    Max: <span className="text-green-600 dark:text-green-400">{minMaxScores.max}</span>
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

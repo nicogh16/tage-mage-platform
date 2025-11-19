@@ -23,6 +23,7 @@ function isValidSectionId(value: string): value is SectionId {
 export default function ScoresPage() {
   const searchParams = useSearchParams();
   const sectionParam = searchParams.get('section');
+  const testParam = searchParams.get('test');
   const selectedSection: SectionId = (SECTION_IDS.includes(sectionParam as SectionId) 
     ? sectionParam 
     : SECTION_IDS[0]) as SectionId;
@@ -44,12 +45,20 @@ export default function ScoresPage() {
   const [section, setSection] = useState(selectedSection);
   const [score, setScore] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [testName, setTestName] = useState('');
+  const [testName, setTestName] = useState(testParam || '');
   const [submitting, setSubmitting] = useState(false);
   
   // Generate test names (test-1 to test-10)
   const availableTests = Array.from({ length: 10 }, (_, i) => `test-${i + 1}`);
   const testsList = getTestsList();
+  
+  // Si un test est passé en paramètre, passer en mode par test et sélectionner ce test
+  useEffect(() => {
+    if (testParam && availableTests.includes(testParam)) {
+      setTestName(testParam);
+      setViewMode('by-test');
+    }
+  }, [testParam, availableTests]);
 
   useEffect(() => {
     if (user) {
