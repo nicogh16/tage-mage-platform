@@ -65,7 +65,30 @@ export default function DashboardPage() {
     };
   });
 
-  const recentScores = scores.slice(0, 5);
+  // Get recent scores, but filter duplicates: if same test_name + section, keep only most recent
+  const getRecentScoresUnique = () => {
+    // Group by test_name + section, keep most recent
+    const scoresByKey = new Map<string, typeof scores[0]>();
+    
+    scores.forEach((score) => {
+      // Create unique key: test_name + section (or just section if no test_name)
+      const key = score.test_name 
+        ? `${score.test_name}-${score.section}`
+        : `no-test-${score.section}`;
+      
+      const existing = scoresByKey.get(key);
+      if (!existing || new Date(score.date) > new Date(existing.date)) {
+        scoresByKey.set(key, score);
+      }
+    });
+    
+    // Convert back to array, sort by date (most recent first), take first 5
+    return Array.from(scoresByKey.values())
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  };
+
+  const recentScores = getRecentScoresUnique();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
