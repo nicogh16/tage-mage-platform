@@ -6,8 +6,13 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Plateforme d&apos;entraînement Tage Mage",
+  title: "Tage Mage - Plateforme d'entraînement",
   description: "Suivez votre progression et améliorez vos scores au Tage Mage",
+  icons: {
+    icon: '/logo.svg',
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
+  },
 };
 
 export default function RootLayout({

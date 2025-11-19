@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, Menu, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -55,8 +56,15 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
-            <Link href="/dashboard" className="text-xl font-bold">
-              Tage Mage
+            <Link href="/dashboard" className="flex items-center space-x-2 text-xl font-bold hover:opacity-80 transition-opacity">
+              <Image 
+                src="/logo.svg" 
+                alt="Tage Mage Logo" 
+                width={32} 
+                height={32}
+                className="dark:invert-0"
+              />
+              <span>Tage Mage</span>
             </Link>
             <div className="hidden md:flex items-center space-x-4">
               {navItems.map((item) => (
