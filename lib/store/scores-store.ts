@@ -9,15 +9,19 @@ export interface Score {
   score: number;
   date: string;
   created_at: string;
+  test_name?: string | null; // Name of the test (e.g., 'test-1', 'test-2')
 }
 
 interface ScoresState {
   scores: Score[];
   loading: boolean;
   fetchScores: () => Promise<void>;
-  addScore: (section: SectionId, score: number, date?: Date) => Promise<void>;
+  addScore: (section: SectionId, score: number, date?: Date, testName?: string) => Promise<void>;
   deleteScore: (id: string) => Promise<void>;
   getScoresBySection: (section: SectionId) => Score[];
+  getScoresByTest: (testName: string) => Score[];
+  getTestsList: () => string[]; // Get list of all test names
+  getTestTotalScore: (testName: string) => number; // Total score for a test (sum of all sections)
   getAverageBySection: (section: SectionId) => number;
   getGlobalAverage: () => number;
   getBestSection: () => SectionId | null;
@@ -53,7 +57,7 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
 
     set({ scores: data || [], loading: false });
   },
-  addScore: async (section, score, date = new Date()) => {
+  addScore: async (section, score, date = new Date(), testName?: string) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -66,6 +70,7 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
         section,
         score,
         date: date.toISOString(),
+        test_name: testName || null,
       })
       .select()
       .single();
@@ -97,6 +102,29 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
   },
   getScoresBySection: (section) => {
     return get().scores.filter((s) => s.section === section);
+  },
+  getScoresByTest: (testName) => {
+    return get().scores.filter((s) => s.test_name === testName);
+  },
+  getTestsList: () => {
+    const tests = new Set<string>();
+    get().scores.forEach((s) => {
+      if (s.test_name) {
+        tests.add(s.test_name);
+      }
+    });
+    return Array.from(tests).sort((a, b) => {
+      // Sort test-1, test-2, etc. numerically
+      const numA = parseInt(a.replace('test-', '')) || 0;
+      const numB = parseInt(b.replace('test-', '')) || 0;
+      return numA - numB;
+    });
+  },
+  getTestTotalScore: (testName) => {
+    const testScores = get().getScoresByTest(testName);
+    if (testScores.length === 0) return 0;
+    // Sum all scores for this test (should be 6 sections × 15 = 90 max)
+    return testScores.reduce((sum, s) => sum + s.score, 0);
   },
   getAverageBySection: (section) => {
     const sectionScores = get().getScoresBySection(section);
