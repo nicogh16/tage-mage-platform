@@ -12,7 +12,7 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { SECTIONS, SECTION_IDS, COLOR_CLASSES, MAX_SCORE_PER_SECTION, SectionId, MAX_SCORE_TAGE_MAGE } from '@/lib/constants';
 import { ScoreLineChart } from '@/components/charts/line-chart';
 import { formatDate } from '@/lib/utils';
-import { Trash2, BookOpen, TrendingUp } from 'lucide-react';
+import { Trash2, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react';
 import { SECTION_COLOR_MAP } from '@/lib/color-map';
 
 // Type guard function
@@ -33,7 +33,9 @@ export default function ScoresPage() {
     loading, 
     fetchScores, 
     addScore, 
-    deleteScore, 
+    deleteScore,
+    deleteAllScoresByTest,
+    deleteAllScoresBySection,
     getScoresBySection,
     getScoresByTest,
     getTestsList,
@@ -80,6 +82,20 @@ export default function ScoresPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce score ?')) {
       await deleteScore(id);
+    }
+  };
+
+  const handleDeleteTest = async (testName: string) => {
+    const testScores = getScoresByTest(testName);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer tous les scores du ${testName.replace('test-', 'Test ')} ?\n\n${testScores.length} score(s) seront supprimé(s).`)) {
+      await deleteAllScoresByTest(testName);
+    }
+  };
+
+  const handleDeleteSection = async (sectionId: SectionId) => {
+    const sectionScores = getScoresBySection(sectionId);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer tous les scores de la section "${SECTIONS[sectionId].name}" ?\n\n${sectionScores.length} score(s) seront supprimé(s).`)) {
+      await deleteAllScoresBySection(sectionId);
     }
   };
 
@@ -249,13 +265,24 @@ export default function ScoresPage() {
                                   <CardTitle className="text-lg">
                                     {test.replace('test-', 'Test ')}
                                   </CardTitle>
-                                  <div className="text-right">
-                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                      {tageMageScore}/{MAX_SCORE_TAGE_MAGE}
+                                  <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                        {tageMageScore}/{MAX_SCORE_TAGE_MAGE}
+                                      </div>
+                                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        {totalScore}/90 (total)
+                                      </div>
                                     </div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                      {totalScore}/90 (total)
-                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteTest(test)}
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                      title="Supprimer tous les scores de ce test"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 </div>
                               </CardHeader>
@@ -299,11 +326,27 @@ export default function ScoresPage() {
               </>
             ) : (
               <>
-                <Card>
-                  <CardHeader>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
                     <CardTitle>{sectionData.name}</CardTitle>
                     <CardDescription>Évolution de vos scores</CardDescription>
-                  </CardHeader>
+                  </div>
+                  {sectionScores.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteSection(section)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      title="Supprimer tous les scores de cette section"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer tous
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
                   <CardContent>
                     {sectionScores.length > 0 ? (
                       <ScoreLineChart

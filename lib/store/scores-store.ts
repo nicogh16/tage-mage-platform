@@ -18,6 +18,8 @@ interface ScoresState {
   fetchScores: () => Promise<void>;
   addScore: (section: SectionId, score: number, date?: Date, testName?: string) => Promise<void>;
   deleteScore: (id: string) => Promise<void>;
+  deleteAllScoresByTest: (testName: string) => Promise<void>;
+  deleteAllScoresBySection: (section: SectionId) => Promise<void>;
   getScoresBySection: (section: SectionId) => Score[];
   getScoresByTest: (testName: string) => Score[];
   getTestsList: () => string[]; // Get list of all test names
@@ -102,6 +104,48 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
 
     set((state) => ({
       scores: state.scores.filter((s) => s.id !== id),
+    }));
+  },
+  deleteAllScoresByTest: async (testName: string) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('scores')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('test_name', testName);
+
+    if (error) {
+      console.error('Error deleting test scores:', error);
+      return;
+    }
+
+    set((state) => ({
+      scores: state.scores.filter((s) => !(s.test_name === testName)),
+    }));
+  },
+  deleteAllScoresBySection: async (section: SectionId) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('scores')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('section', section);
+
+    if (error) {
+      console.error('Error deleting section scores:', error);
+      return;
+    }
+
+    set((state) => ({
+      scores: state.scores.filter((s) => s.section !== section),
     }));
   },
   getScoresBySection: (section) => {
